@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from playlist_creator.apple_music import AppleMusicClient, AppleMusicConfig
+from playlist_creator.apple_music import AppleMusicClient
+from playlist_creator.auth import AppleMusicAuth, AppleMusicConfig
 
 
 @pytest.fixture
@@ -29,19 +30,24 @@ def config():
 
 
 @pytest.fixture
-def client(config):
-    return AppleMusicClient(config, user_token="test-user-token")
+def auth(config):
+    return AppleMusicAuth(config, user_token="test-user-token")
 
 
-def test_developer_token_generated(client):
-    token = client.developer_token
+@pytest.fixture
+def client(auth):
+    return AppleMusicClient(auth)
+
+
+def test_developer_token_generated(auth):
+    token = auth.developer_token
     assert isinstance(token, str)
     assert len(token) > 0
 
 
-def test_developer_token_cached(client):
-    token1 = client.developer_token
-    token2 = client.developer_token
+def test_developer_token_cached(auth):
+    token1 = auth.developer_token
+    token2 = auth.developer_token
     assert token1 == token2
 
 

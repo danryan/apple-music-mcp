@@ -9,7 +9,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from .apple_music import AppleMusicClient, AppleMusicConfig
+from .apple_music import AppleMusicClient
+from .auth import AppleMusicAuth, AppleMusicConfig
 from .parser import Track, parse_markdown
 
 load_dotenv()
@@ -42,8 +43,8 @@ def _build_client() -> AppleMusicClient:
         private_key=private_key,
         storefront=os.environ.get("APPLE_MUSIC_STOREFRONT", "us"),
     )
-    user_token = _get_env("APPLE_MUSIC_USER_TOKEN")
-    return AppleMusicClient(config, user_token)
+    auth = AppleMusicAuth(config, user_token=_get_env("APPLE_MUSIC_USER_TOKEN"))
+    return AppleMusicClient(auth)
 
 
 def _search_track(client: AppleMusicClient, track: Track, verbose: bool) -> dict | None:

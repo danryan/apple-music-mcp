@@ -7,7 +7,8 @@ Apple Music playlist creator — CLI tool and MCP server for searching the Apple
 ```
 playlist_creator/
   __init__.py
-  apple_music.py      # AppleMusicClient — JWT auth, catalog search, playlist CRUD
+  auth.py             # AppleMusicAuth — JWT token generation and auth headers
+  apple_music.py      # AppleMusicClient — catalog search, playlist CRUD
   parser.py           # Markdown parser — extracts playlist name, description, tracks
   mcp_server.py       # MCP server (FastMCP, stdio transport) wrapping AppleMusicClient
   cli.py              # CLI entry point

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import playlist_creator.mcp_server as mcp_mod
 from playlist_creator.mcp_server import (
     add_to_playlist,
     create_playlist,
@@ -12,6 +13,14 @@ from playlist_creator.mcp_server import (
     list_playlists,
     search_catalog,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_client_cache():
+    """Reset the cached MCP client between tests."""
+    mcp_mod._client = None
+    yield
+    mcp_mod._client = None
 
 
 @pytest.fixture

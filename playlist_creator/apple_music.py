@@ -2,69 +2,30 @@
 
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass
 from typing import Any
 
-import jwt
 import requests
 
+from .auth import AppleMusicAuth, AppleMusicConfig  # noqa: F401 — re-exported
+
 APPLE_MUSIC_API = "https://api.music.apple.com/v1"
-
-
-@dataclass
-class AppleMusicConfig:
-    team_id: str
-    key_id: str
-    private_key: str  # PEM-encoded private key contents
-    storefront: str = "us"
 
 
 class AppleMusicClient:
     """Client for Apple Music API operations."""
 
-    def __init__(self, config: AppleMusicConfig, user_token: str) -> None:
-        self.config = config
-        self.user_token = user_token
-        self._developer_token: str | None = None
-        self._token_expiry: float = 0
+    def __init__(self, auth: AppleMusicAuth) -> None:
+        self.auth = auth
 
     @property
-    def developer_token(self) -> str:
-        now = time.time()
-        if self._developer_token and now < self._token_expiry:
-            return self._developer_token
-
-        expiry = now + 3600  # 1 hour
-        payload = {
-            "iss": self.config.team_id,
-            "iat": int(now),
-            "exp": int(expiry),
-        }
-        token = jwt.encode(
-            payload,
-            self.config.private_key,
-            algorithm="ES256",
-            headers={"kid": self.config.key_id},
-        )
-        self._developer_token = token
-        self._token_expiry = expiry - 60  # refresh 1 min early
-        return token
-
-    def _headers(self, *, include_user_token: bool = False) -> dict[str, str]:
-        headers = {
-            "Authorization": f"Bearer {self.developer_token}",
-            "Content-Type": "application/json",
-        }
-        if include_user_token:
-            headers["Music-User-Token"] = self.user_token
-        return headers
+    def storefront(self) -> str:
+        return self.auth.config.storefront
 
     def search_track(self, query: str) -> dict | None:
         """Search for a song and return the first match, or None."""
-        url = f"{APPLE_MUSIC_API}/catalog/{self.config.storefront}/search"
+        url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/search"
         params = {"term": query, "types": "songs", "limit": 1}
-        resp = requests.get(url, headers=self._headers(), params=params, timeout=30)
+        resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
         resp.raise_for_status()
 
         data = resp.json()
@@ -86,7 +47,7 @@ class AppleMusicClient:
         }
         resp = requests.post(
             url,
-            headers=self._headers(include_user_token=True),
+            headers=self.auth.headers(include_user_token=True),
             json=body,
             timeout=30,
         )
@@ -98,9 +59,9 @@ class AppleMusicClient:
         self, query: str, limit: int = 10, types: str = "songs"
     ) -> list[dict[str, Any]]:
         """Search the Apple Music catalog. Returns a list of result dicts."""
-        url = f"{APPLE_MUSIC_API}/catalog/{self.config.storefront}/search"
+        url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/search"
         params = {"term": query, "types": types, "limit": limit}
-        resp = requests.get(url, headers=self._headers(), params=params, timeout=30)
+        resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
         resp.raise_for_status()
 
         data = resp.json()
@@ -130,9 +91,9 @@ class AppleMusicClient:
         Returns a dict with artist info and a list of top songs.
         """
         # Step 1: Search for the artist
-        url = f"{APPLE_MUSIC_API}/catalog/{self.config.storefront}/search"
+        url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/search"
         params = {"term": artist_name, "types": "artists", "limit": 1}
-        resp = requests.get(url, headers=self._headers(), params=params, timeout=30)
+        resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
         resp.raise_for_status()
 
         data = resp.json()
@@ -146,12 +107,12 @@ class AppleMusicClient:
 
         # Step 2: Fetch top songs
         top_songs_url = (
-            f"{APPLE_MUSIC_API}/catalog/{self.config.storefront}"
+            f"{APPLE_MUSIC_API}/catalog/{self.storefront}"
             f"/artists/{artist_id}/view/top-songs"
         )
         params = {"limit": limit}
         resp = requests.get(
-            top_songs_url, headers=self._headers(), params=params, timeout=30
+            top_songs_url, headers=self.auth.headers(), params=params, timeout=30
         )
         resp.raise_for_status()
 
@@ -188,7 +149,7 @@ class AppleMusicClient:
         url = f"{APPLE_MUSIC_API}/me/library/playlists"
         resp = requests.get(
             url,
-            headers=self._headers(include_user_token=True),
+            headers=self.auth.headers(include_user_token=True),
             timeout=30,
         )
         resp.raise_for_status()
@@ -213,7 +174,7 @@ class AppleMusicClient:
         while True:
             resp = requests.get(
                 url,
-                headers=self._headers(include_user_token=True),
+                headers=self.auth.headers(include_user_token=True),
                 params=params,
                 timeout=30,
             )
@@ -263,7 +224,7 @@ class AppleMusicClient:
             body = {"data": to_add}
             resp = requests.post(
                 url,
-                headers=self._headers(include_user_token=True),
+                headers=self.auth.headers(include_user_token=True),
                 json=body,
                 timeout=30,
             )

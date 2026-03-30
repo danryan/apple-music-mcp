@@ -9,7 +9,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
-from .apple_music import AppleMusicClient, AppleMusicConfig
+from .apple_music import AppleMusicClient
+from .auth import AppleMusicAuth, AppleMusicConfig
 from .parser import parse_markdown_text
 
 load_dotenv()
@@ -17,6 +18,8 @@ load_dotenv()
 logger = logging.getLogger("apple-music-mcp")
 
 mcp = FastMCP("apple-music")
+
+_client: AppleMusicClient | None = None
 
 
 def _get_env(name: str) -> str:
@@ -27,8 +30,12 @@ def _get_env(name: str) -> str:
     return value
 
 
-def _build_client() -> AppleMusicClient:
-    """Build an AppleMusicClient from environment variables."""
+def _get_client() -> AppleMusicClient:
+    """Return a cached AppleMusicClient, building it on first call."""
+    global _client
+    if _client is not None:
+        return _client
+
     key_path = os.environ.get("APPLE_PRIVATE_KEY_PATH")
     private_key = os.environ.get("APPLE_PRIVATE_KEY")
 
@@ -48,8 +55,9 @@ def _build_client() -> AppleMusicClient:
         private_key=private_key,
         storefront=os.environ.get("APPLE_MUSIC_STOREFRONT", "us"),
     )
-    user_token = _get_env("APPLE_MUSIC_USER_TOKEN")
-    return AppleMusicClient(config, user_token)
+    auth = AppleMusicAuth(config, user_token=_get_env("APPLE_MUSIC_USER_TOKEN"))
+    _client = AppleMusicClient(auth)
+    return _client
 
 
 def _handle_api_error(e: Exception) -> str:
@@ -79,7 +87,7 @@ def search_catalog(query: str, limit: int = 10, types: str = "songs") -> dict[st
     """
     logger.info("search_catalog query=%r limit=%d types=%s", query, limit, types)
     try:
-        client = _build_client()
+        client = _get_client()
         results = client.search_catalog(query, limit=limit, types=types)
         logger.info("search_catalog returned %d results", len(results))
         return {"results": results}
@@ -102,7 +110,7 @@ def get_artist_top_songs(artist: str, limit: int = 20, lead_artist_only: bool = 
     """
     logger.info("get_artist_top_songs artist=%r limit=%d lead_artist_only=%s", artist, limit, lead_artist_only)
     try:
-        client = _build_client()
+        client = _get_client()
         result = client.get_artist_top_songs(artist, limit=limit, lead_artist_only=lead_artist_only)
         if result["artist"] is None:
             logger.warning("get_artist_top_songs: artist not found for %r", artist)
@@ -128,7 +136,7 @@ def create_playlist(name: str, description: str = "") -> dict[str, object]:
     """
     logger.info("create_playlist name=%r", name)
     try:
-        client = _build_client()
+        client = _get_client()
         playlist_id = client.create_playlist(name, description)
         logger.info("create_playlist created id=%s", playlist_id)
         return {"id": playlist_id, "name": name}
@@ -147,7 +155,7 @@ def add_to_playlist(playlist_id: str, song_ids: list[str]) -> dict[str, object]:
     """
     logger.info("add_to_playlist playlist_id=%s songs=%d", playlist_id, len(song_ids))
     try:
-        client = _build_client()
+        client = _get_client()
         track_data = [{"id": sid, "type": "songs"} for sid in song_ids]
         result = client.add_tracks_to_playlist(playlist_id, track_data)
         added = result["added"]
@@ -168,7 +176,7 @@ def list_playlists() -> dict[str, object]:
     """List the user's Apple Music library playlists."""
     logger.info("list_playlists")
     try:
-        client = _build_client()
+        client = _get_client()
         playlists = client.list_playlists()
         logger.info("list_playlists returned %d playlists", len(playlists))
         return {"playlists": playlists}
@@ -190,7 +198,7 @@ def search_playlist(
     """
     logger.info("search_playlist playlist_id=%s query=%r", playlist_id, query)
     try:
-        client = _build_client()
+        client = _get_client()
         tracks = client.get_playlist_tracks(playlist_id)
         query_lower = query.lower()
         matches = [
@@ -231,7 +239,7 @@ def create_playlist_from_markdown(
         playlist_desc = description or playlist.description
         logger.info("parsed %d tracks from markdown, playlist=%r", len(playlist.tracks), playlist_name)
 
-        client = _build_client()
+        client = _get_client()
 
         matched: list[dict[str, str]] = []
         not_found: list[dict[str, str]] = []
