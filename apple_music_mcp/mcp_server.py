@@ -215,6 +215,148 @@ def search_playlist(
 
 
 @mcp.tool()
+def get_playlist_tracks(playlist_id: str, limit: int = 100) -> dict[str, object]:
+    """Get all tracks in a library playlist.
+
+    Args:
+        playlist_id: The library playlist ID.
+        limit: Maximum number of tracks to return (default 100).
+    """
+    logger.info("get_playlist_tracks playlist_id=%s limit=%d", playlist_id, limit)
+    try:
+        client = _get_client()
+        tracks = client.get_playlist_tracks(playlist_id)
+        if limit and len(tracks) > limit:
+            tracks = tracks[:limit]
+        logger.info("get_playlist_tracks returned %d tracks", len(tracks))
+        return {"tracks": tracks, "total": len(tracks)}
+    except Exception as e:
+        logger.error("get_playlist_tracks failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def search_library(
+    query: str,
+    types: str = "library-songs,library-albums,library-artists,library-playlists",
+    limit: int = 10,
+) -> dict[str, object]:
+    """Search the user's Apple Music library for songs, albums, artists, or playlists.
+
+    Args:
+        query: Search query string.
+        types: Comma-separated library resource types (default: all).
+        limit: Maximum results per type (default 10, max 25).
+    """
+    logger.info("search_library query=%r types=%s limit=%d", query, types, limit)
+    try:
+        client = _get_client()
+        results = client.search_library(query, types=types, limit=limit)
+        logger.info("search_library returned %d results", len(results))
+        return {"results": results}
+    except Exception as e:
+        logger.error("search_library failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def get_library_songs(limit: int = 25, offset: int = 0) -> dict[str, object]:
+    """List songs in the user's Apple Music library with pagination.
+
+    Args:
+        limit: Number of songs to return (1-100, default 25).
+        offset: Pagination offset (default 0).
+    """
+    logger.info("get_library_songs limit=%d offset=%d", limit, offset)
+    try:
+        client = _get_client()
+        songs = client.get_library_songs(limit=limit, offset=offset)
+        logger.info("get_library_songs returned %d songs", len(songs))
+        return {"songs": songs}
+    except Exception as e:
+        logger.error("get_library_songs failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def get_library_albums(limit: int = 25, offset: int = 0) -> dict[str, object]:
+    """List albums in the user's Apple Music library with pagination.
+
+    Args:
+        limit: Number of albums to return (1-100, default 25).
+        offset: Pagination offset (default 0).
+    """
+    logger.info("get_library_albums limit=%d offset=%d", limit, offset)
+    try:
+        client = _get_client()
+        albums = client.get_library_albums(limit=limit, offset=offset)
+        logger.info("get_library_albums returned %d albums", len(albums))
+        return {"albums": albums}
+    except Exception as e:
+        logger.error("get_library_albums failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def get_library_artists(limit: int = 25, offset: int = 0) -> dict[str, object]:
+    """List artists in the user's Apple Music library with pagination.
+
+    Args:
+        limit: Number of artists to return (1-100, default 25).
+        offset: Pagination offset (default 0).
+    """
+    logger.info("get_library_artists limit=%d offset=%d", limit, offset)
+    try:
+        client = _get_client()
+        artists = client.get_library_artists(limit=limit, offset=offset)
+        logger.info("get_library_artists returned %d artists", len(artists))
+        return {"artists": artists}
+    except Exception as e:
+        logger.error("get_library_artists failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def get_recently_played(limit: int = 10) -> dict[str, object]:
+    """Get the user's recently played items on Apple Music.
+
+    Returns recently played albums, playlists, and stations.
+
+    Args:
+        limit: Number of items to return (1-50, default 10).
+    """
+    logger.info("get_recently_played limit=%d", limit)
+    try:
+        client = _get_client()
+        items = client.get_recently_played(limit=limit)
+        logger.info("get_recently_played returned %d items", len(items))
+        return {"items": items}
+    except Exception as e:
+        logger.error("get_recently_played failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def get_recommendations(limit: int = 5) -> dict[str, object]:
+    """Get personalized music recommendations from Apple Music.
+
+    Returns recommendation groups with suggested albums, playlists, and more.
+
+    Args:
+        limit: Number of recommendation groups (1-10, default 5).
+    """
+    logger.info("get_recommendations limit=%d", limit)
+    try:
+        client = _get_client()
+        recs = client.get_recommendations(limit=limit)
+        logger.info("get_recommendations returned %d groups", len(recs))
+        return {"recommendations": recs}
+    except Exception as e:
+        logger.error("get_recommendations failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
 def create_playlist_from_markdown(
     markdown: str,
     name: str | None = None,

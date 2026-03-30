@@ -12,7 +12,12 @@ You have access to an Apple Music MCP server with these tools:
 
 - `search_catalog(query, limit, types)` — Search Apple Music for songs, albums, or artists
 - `list_playlists()` — List the user's Apple Music library playlists
+- `get_playlist_tracks(playlist_id, limit)` — Get all tracks in a playlist
 - `search_playlist(playlist_id, query)` — Search within a playlist by title/artist/album
+- `search_library(query, types, limit)` — Search the user's library (songs, albums, artists, playlists)
+- `get_library_songs(limit, offset)` — Browse library songs with pagination
+- `get_library_albums(limit, offset)` — Browse library albums with pagination
+- `get_library_artists(limit, offset)` — Browse library artists with pagination
 - `add_to_playlist(playlist_id, song_ids)` — Add songs by catalog ID (skips duplicates)
 - `create_playlist(name, description)` — Create a new library playlist
 
@@ -52,8 +57,8 @@ If the user is vague ("my workout playlist"), list playlists and pick the best m
 - Report which playlists contain the track
 
 **Finding duplicates within a playlist:**
-- Use `search_playlist` with artist names or song titles that might appear multiple times
-- Note: the API doesn't return full track lists directly, so search for specific artists/titles the user mentions, or ask what to check for
+- Use `get_playlist_tracks` to get the full track list, then check for duplicate titles/artists
+- For quick checks on specific tracks, use `search_playlist` instead
 
 **Merging playlists:**
 - Search the source playlists to identify tracks

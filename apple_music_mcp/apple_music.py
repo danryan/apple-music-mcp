@@ -204,6 +204,143 @@ class AppleMusicClient:
 
         return tracks
 
+    def search_library(
+        self, query: str, types: str = "library-songs,library-albums,library-artists,library-playlists", limit: int = 10
+    ) -> list[dict[str, Any]]:
+        """Search the user's library. Returns a list of result dicts."""
+        url = f"{APPLE_MUSIC_API}/me/library/search"
+        params = {"term": query, "types": types, "limit": limit}
+        resp = requests.get(
+            url, headers=self.auth.headers(include_user_token=True), params=params, timeout=30
+        )
+        resp.raise_for_status()
+
+        data = resp.json()
+        results = []
+        for type_key in types.split(","):
+            type_key = type_key.strip()
+            items = data.get("results", {}).get(type_key, {}).get("data", [])
+            for item in items:
+                attrs = item.get("attributes", {})
+                results.append({
+                    "id": item["id"],
+                    "type": item.get("type", type_key),
+                    "title": attrs.get("name", ""),
+                    "artist": attrs.get("artistName", ""),
+                    "album": attrs.get("albumName", ""),
+                    "duration_ms": attrs.get("durationInMillis", 0),
+                    "track_count": attrs.get("trackCount", 0),
+                })
+        return results
+
+    def get_library_songs(self, limit: int = 25, offset: int = 0) -> list[dict[str, Any]]:
+        """List songs in the user's library with pagination."""
+        url = f"{APPLE_MUSIC_API}/me/library/songs"
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        resp = requests.get(
+            url, headers=self.auth.headers(include_user_token=True), params=params, timeout=30
+        )
+        resp.raise_for_status()
+
+        results = []
+        for item in resp.json().get("data", []):
+            attrs = item.get("attributes", {})
+            results.append({
+                "id": item["id"],
+                "title": attrs.get("name", ""),
+                "artist": attrs.get("artistName", ""),
+                "album": attrs.get("albumName", ""),
+                "duration_ms": attrs.get("durationInMillis", 0),
+                "track_number": attrs.get("trackNumber", 0),
+            })
+        return results
+
+    def get_library_albums(self, limit: int = 25, offset: int = 0) -> list[dict[str, Any]]:
+        """List albums in the user's library with pagination."""
+        url = f"{APPLE_MUSIC_API}/me/library/albums"
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        resp = requests.get(
+            url, headers=self.auth.headers(include_user_token=True), params=params, timeout=30
+        )
+        resp.raise_for_status()
+
+        results = []
+        for item in resp.json().get("data", []):
+            attrs = item.get("attributes", {})
+            results.append({
+                "id": item["id"],
+                "name": attrs.get("name", ""),
+                "artist": attrs.get("artistName", ""),
+                "track_count": attrs.get("trackCount", 0),
+                "release_date": attrs.get("releaseDate", ""),
+            })
+        return results
+
+    def get_library_artists(self, limit: int = 25, offset: int = 0) -> list[dict[str, Any]]:
+        """List artists in the user's library with pagination."""
+        url = f"{APPLE_MUSIC_API}/me/library/artists"
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        resp = requests.get(
+            url, headers=self.auth.headers(include_user_token=True), params=params, timeout=30
+        )
+        resp.raise_for_status()
+
+        results = []
+        for item in resp.json().get("data", []):
+            attrs = item.get("attributes", {})
+            results.append({
+                "id": item["id"],
+                "name": attrs.get("name", ""),
+            })
+        return results
+
+    def get_recently_played(self, limit: int = 10) -> list[dict[str, Any]]:
+        """Get recently played items (albums, playlists, stations)."""
+        url = f"{APPLE_MUSIC_API}/me/recent/played"
+        params: dict[str, Any] = {"limit": limit}
+        resp = requests.get(
+            url, headers=self.auth.headers(include_user_token=True), params=params, timeout=30
+        )
+        resp.raise_for_status()
+
+        results = []
+        for item in resp.json().get("data", []):
+            attrs = item.get("attributes", {})
+            results.append({
+                "id": item["id"],
+                "type": item.get("type", ""),
+                "name": attrs.get("name", ""),
+                "artist": attrs.get("artistName", ""),
+            })
+        return results
+
+    def get_recommendations(self, limit: int = 5) -> list[dict[str, Any]]:
+        """Get personalized recommendations from Apple Music."""
+        url = f"{APPLE_MUSIC_API}/me/recommendations"
+        params: dict[str, Any] = {"limit": limit}
+        resp = requests.get(
+            url, headers=self.auth.headers(include_user_token=True), params=params, timeout=30
+        )
+        resp.raise_for_status()
+
+        results = []
+        for group in resp.json().get("data", []):
+            attrs = group.get("attributes", {})
+            items = []
+            for rel in group.get("relationships", {}).get("contents", {}).get("data", []):
+                rel_attrs = rel.get("attributes", {})
+                items.append({
+                    "id": rel["id"],
+                    "type": rel.get("type", ""),
+                    "name": rel_attrs.get("name", ""),
+                    "artist": rel_attrs.get("artistName", ""),
+                })
+            results.append({
+                "title": attrs.get("title", {}).get("stringForDisplay", ""),
+                "items": items,
+            })
+        return results
+
     def add_tracks_to_playlist(
         self, playlist_id: str, track_ids: list[dict[str, str]]
     ) -> dict[str, list[dict[str, str]]]:

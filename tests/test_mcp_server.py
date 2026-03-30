@@ -10,8 +10,15 @@ from apple_music_mcp.mcp_server import (
     add_to_playlist,
     create_playlist,
     create_playlist_from_markdown,
+    get_library_albums,
+    get_library_artists,
+    get_library_songs,
+    get_playlist_tracks,
+    get_recently_played,
+    get_recommendations,
     list_playlists,
     search_catalog,
+    search_library,
 )
 
 
@@ -156,6 +163,222 @@ class TestListPlaylists:
         result = list_playlists()
         assert len(result["playlists"]) == 1
         assert result["playlists"][0]["name"] == "Late Night Ambient"
+
+
+class TestGetPlaylistTracks:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_tracks(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "i.abc123",
+                    "attributes": {
+                        "name": "Rhubarb",
+                        "artistName": "Aphex Twin",
+                        "albumName": "SAW II",
+                        "durationInMillis": 312000,
+                        "trackNumber": 3,
+                        "playParams": {"catalogId": "999"},
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_playlist_tracks("p.abc123")
+        assert len(result["tracks"]) == 1
+        assert result["tracks"][0]["title"] == "Rhubarb"
+        assert result["tracks"][0]["catalog_id"] == "999"
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_respects_limit(self, mock_get, mock_env):
+        tracks = [
+            {
+                "id": f"i.{i}",
+                "attributes": {
+                    "name": f"Track {i}",
+                    "artistName": "Artist",
+                    "albumName": "Album",
+                    "durationInMillis": 180000,
+                    "trackNumber": i,
+                    "playParams": {"catalogId": str(i)},
+                },
+            }
+            for i in range(5)
+        ]
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"data": tracks}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_playlist_tracks("p.abc123", limit=3)
+        assert len(result["tracks"]) == 3
+
+
+class TestSearchLibrary:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_results(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "results": {
+                "library-songs": {
+                    "data": [
+                        {
+                            "id": "i.abc",
+                            "type": "library-songs",
+                            "attributes": {
+                                "name": "Rhubarb",
+                                "artistName": "Aphex Twin",
+                                "albumName": "SAW II",
+                                "durationInMillis": 312000,
+                            },
+                        }
+                    ]
+                }
+            }
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = search_library("Aphex Twin", types="library-songs")
+        assert len(result["results"]) == 1
+        assert result["results"][0]["title"] == "Rhubarb"
+
+
+class TestGetLibrarySongs:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_songs(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "i.abc",
+                    "attributes": {
+                        "name": "Rhubarb",
+                        "artistName": "Aphex Twin",
+                        "albumName": "SAW II",
+                        "durationInMillis": 312000,
+                        "trackNumber": 3,
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_library_songs(limit=10)
+        assert len(result["songs"]) == 1
+        assert result["songs"][0]["title"] == "Rhubarb"
+
+
+class TestGetLibraryAlbums:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_albums(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "l.abc",
+                    "attributes": {
+                        "name": "Selected Ambient Works Volume II",
+                        "artistName": "Aphex Twin",
+                        "trackCount": 24,
+                        "releaseDate": "1994-11-07",
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_library_albums(limit=10)
+        assert len(result["albums"]) == 1
+        assert result["albums"][0]["name"] == "Selected Ambient Works Volume II"
+
+
+class TestGetLibraryArtists:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_artists(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "r.abc",
+                    "attributes": {"name": "Aphex Twin"},
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_library_artists(limit=10)
+        assert len(result["artists"]) == 1
+        assert result["artists"][0]["name"] == "Aphex Twin"
+
+
+class TestGetRecentlyPlayed:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_items(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "l.abc",
+                    "type": "albums",
+                    "attributes": {
+                        "name": "SAW II",
+                        "artistName": "Aphex Twin",
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_recently_played(limit=5)
+        assert len(result["items"]) == 1
+        assert result["items"][0]["name"] == "SAW II"
+        assert result["items"][0]["type"] == "albums"
+
+
+class TestGetRecommendations:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_recommendations(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "attributes": {
+                        "title": {"stringForDisplay": "Made for You"},
+                    },
+                    "relationships": {
+                        "contents": {
+                            "data": [
+                                {
+                                    "id": "pl.abc",
+                                    "type": "playlists",
+                                    "attributes": {
+                                        "name": "New Music Mix",
+                                        "artistName": "",
+                                    },
+                                }
+                            ]
+                        }
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_recommendations(limit=5)
+        assert len(result["recommendations"]) == 1
+        assert result["recommendations"][0]["title"] == "Made for You"
+        assert len(result["recommendations"][0]["items"]) == 1
 
 
 class TestCreatePlaylistFromMarkdown:

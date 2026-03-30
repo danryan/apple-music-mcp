@@ -12,6 +12,9 @@ You have access to an Apple Music MCP server with these tools:
 
 - `search_catalog(query, limit, types)` — Search Apple Music for songs, albums, or artists
 - `get_artist_top_songs(artist, limit, lead_artist_only)` — Get an artist's top songs sorted by popularity
+- `get_recently_played(limit)` — Get recently played albums/playlists/stations
+- `get_recommendations(limit)` — Get personalized recommendation groups from Apple Music
+- `search_library(query, types, limit)` — Search the user's library
 
 ## Your task
 

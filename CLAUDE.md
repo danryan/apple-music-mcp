@@ -81,7 +81,14 @@ poetry run playlist-creator examples/road_trip.md -v           # create playlist
 | `create_playlist(name, description)` | Create a library playlist |
 | `add_to_playlist(playlist_id, song_ids)` | Add songs by catalog ID (skips duplicates) |
 | `list_playlists()` | List user's library playlists |
+| `get_playlist_tracks(playlist_id, limit)` | Get all tracks in a playlist |
 | `search_playlist(playlist_id, query)` | Search within a playlist by title/artist/album |
+| `search_library(query, types, limit)` | Search user's library (songs, albums, artists, playlists) |
+| `get_library_songs(limit, offset)` | Browse library songs with pagination |
+| `get_library_albums(limit, offset)` | Browse library albums with pagination |
+| `get_library_artists(limit, offset)` | Browse library artists with pagination |
+| `get_recently_played(limit)` | Recently played albums/playlists/stations |
+| `get_recommendations(limit)` | Personalized recommendation groups |
 | `create_playlist_from_markdown(markdown, name, description, dry_run)` | Parse markdown and create playlist |
 
 ## Testing
