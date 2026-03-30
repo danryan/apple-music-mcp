@@ -12,9 +12,11 @@ allowed-tools: Read, Glob
 You have access to an Apple Music MCP server with these tools:
 
 - `search_catalog(query, limit, types)` — Search Apple Music for songs, albums, or artists
+- `get_artist_top_songs(artist, limit, lead_artist_only)` — Get an artist's top songs sorted by popularity
 - `create_playlist(name, description)` — Create a new library playlist
 - `add_to_playlist(playlist_id, song_ids)` — Add songs by catalog ID
 - `list_playlists()` — List the user's library playlists
+- `search_playlist(playlist_id, query)` — Search within a playlist by title/artist/album
 - `create_playlist_from_markdown(markdown, name, description, dry_run)` — Parse markdown and create a playlist in one step
 
 ## Your task
