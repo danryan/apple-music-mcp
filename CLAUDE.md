@@ -70,9 +70,11 @@ Runs on stdio. Configure in Claude Desktop or Claude Code as an MCP server.
 | Tool | Purpose |
 |---|---|
 | `search_catalog(query, limit, types)` | Search Apple Music catalog |
+| `get_artist_top_songs(artist, limit, lead_artist_only)` | Get an artist's top songs by popularity |
 | `create_playlist(name, description)` | Create a library playlist |
-| `add_to_playlist(playlist_id, song_ids)` | Add songs by catalog ID |
+| `add_to_playlist(playlist_id, song_ids)` | Add songs by catalog ID (skips duplicates) |
 | `list_playlists()` | List user's library playlists |
+| `search_playlist(playlist_id, query)` | Search within a playlist by title/artist/album |
 | `create_playlist_from_markdown(markdown, name, description, dry_run)` | Parse markdown and create playlist |
 
 ## Testing
