@@ -17,7 +17,8 @@ tests/
   test_apple_music.py # API client tests (mocked)
   test_mcp_server.py  # MCP server tests
 examples/
-  road_trip.md        # Example markdown playlist
+  road_trip.md             # Example markdown playlist
+  iconic-mpc-producers.md  # Example large playlist (212 tracks)
 .claude/
   skills/playlist/    # /playlist skill for curating playlists via MCP tools
 ```
@@ -36,9 +37,11 @@ Copy `.env.example` to `.env` and fill in values. Required:
 |---|---|
 | `APPLE_TEAM_ID` | Apple Developer Team ID (10 chars) |
 | `APPLE_KEY_ID` | MusicKit key identifier (10 chars) |
-| `APPLE_PRIVATE_KEY_PATH` | Path to `.p8` private key file |
+| `APPLE_PRIVATE_KEY_PATH` | Path to `.p8` private key file (one of this or `APPLE_PRIVATE_KEY` required) |
+| `APPLE_PRIVATE_KEY` | PEM string, alternative to `APPLE_PRIVATE_KEY_PATH` |
 | `APPLE_MUSIC_USER_TOKEN` | Music User Token (from `get_user_token.html`) |
 | `APPLE_MUSIC_STOREFRONT` | Country code, defaults to `us` |
+| `LOG_LEVEL` | MCP server log level, defaults to `INFO` |
 
 ### Token generation
 
