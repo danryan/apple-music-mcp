@@ -94,7 +94,7 @@ poetry run pytest
 
 - **Never push directly to main.** No exceptions.
 - **Every change gets its own branch and PR.** Even small fixes, doc updates, or single-file changes.
-- Create a new branch from main, commit work there, push the branch, and open a PR.
+- **Create the feature branch before modifying any files.** Always `git checkout -b <branch>` first, then start making changes.
 - Do not add unrelated commits to an existing PR's branch — open a separate PR instead.
 - Branch naming: `claude/<short-description>` or `<username>/<short-description>`
 
