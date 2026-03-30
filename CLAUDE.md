@@ -93,13 +93,21 @@ poetry run playlist-creator examples/road_trip.md -v           # create playlist
 
 ## Testing
 
-Follow **test-driven development (TDD)** — red, green, refactor:
+**You MUST follow test-driven development (TDD). No exceptions.** Do not write feature code until a failing test exists for it.
 
-1. **Red**: Write a failing test first, before writing any feature code. Run `poetry run pytest` to confirm it fails.
-2. **Green**: Write the minimum code to make the test pass. Run tests again to confirm.
-3. **Refactor**: Clean up the code while keeping tests green. Run tests after every change.
+### TDD workflow (red-green-refactor)
 
-Run tests early and often — before starting work, after each change, and before committing.
+1. **Red — write the test first.** Before touching any feature code, write a test for the behavior you're about to implement. Run `poetry run pytest` and confirm the new test **fails**. If it passes, the test isn't testing anything new.
+2. **Green — make it pass.** Write the minimum feature code to make the failing test pass. Run `poetry run pytest` and confirm **all tests pass**.
+3. **Refactor — clean up.** Improve the code (feature or test) while keeping all tests green. Run `poetry run pytest` after every change.
+
+### When to run tests
+
+- **Before starting work** — run the full suite to confirm a clean baseline.
+- **After writing each failing test** — confirm it actually fails.
+- **After writing feature code** — confirm the test now passes and nothing else broke.
+- **After refactoring** — confirm tests still pass.
+- **Before committing** — final check, no exceptions.
 
 ```bash
 poetry run pytest
