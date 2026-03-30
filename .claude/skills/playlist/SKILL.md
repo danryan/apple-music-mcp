@@ -4,7 +4,6 @@ description: Create Apple Music playlists using MCP tools — search catalog, cu
 argument-hint: <description of playlist to create>
 user-invocable: true
 disable-model-invocation: false
-allowed-tools: Read, Glob
 ---
 
 # Apple Music Playlist Creator

@@ -20,7 +20,10 @@ examples/
   road_trip.md             # Example markdown playlist
   iconic-mpc-producers.md  # Example large playlist (212 tracks)
 .claude/
-  skills/playlist/    # /playlist skill for curating playlists via MCP tools
+  skills/playlist/         # /playlist — curate and create playlists via MCP tools
+  skills/discover/         # /discover — music recommendations and artist exploration
+  skills/playlist-manage/  # /playlist-manage — inspect, search, and merge playlists
+  skills/top-songs/        # /top-songs — artist top songs and comparisons
 ```
 
 ## Setup

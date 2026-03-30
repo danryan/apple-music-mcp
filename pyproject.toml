@@ -9,7 +9,7 @@ packages = [{include = "apple_music_mcp"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 cryptography = "^41.0"
-mcp = {version = "*", optional = true}
+mcp = "*"
 PyJWT = "^2.8"
 python-dotenv = "^1.2.2"
 requests = "^2.31"
@@ -17,9 +17,6 @@ requests = "^2.31"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
 pytest-mock = "^3.0"
-
-[tool.poetry.extras]
-mcp = ["mcp"]
 
 [tool.poetry.scripts]
 playlist-creator = "apple_music_mcp.cli:main"
