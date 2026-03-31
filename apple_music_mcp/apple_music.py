@@ -341,6 +341,159 @@ class AppleMusicClient:
             })
         return results
 
+    def get_song_details(self, song_id: str) -> dict[str, Any] | None:
+        """Get detailed information about a song by catalog ID."""
+        url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/songs/{song_id}"
+        resp = requests.get(url, headers=self.auth.headers(), timeout=30)
+        resp.raise_for_status()
+
+        data = resp.json().get("data", [])
+        if not data:
+            return None
+
+        item = data[0]
+        attrs = item.get("attributes", {})
+        previews = attrs.get("previews", [])
+        artwork = attrs.get("artwork", {})
+        return {
+            "id": item["id"],
+            "title": attrs.get("name", ""),
+            "artist": attrs.get("artistName", ""),
+            "album": attrs.get("albumName", ""),
+            "duration_ms": attrs.get("durationInMillis", 0),
+            "genres": attrs.get("genreNames", []),
+            "release_date": attrs.get("releaseDate", ""),
+            "url": attrs.get("url", ""),
+            "has_lyrics": attrs.get("hasLyrics", False),
+            "preview_url": previews[0]["url"] if previews else "",
+            "artwork_url": artwork.get("url", ""),
+            "isrc": attrs.get("isrc", ""),
+            "composer": attrs.get("composerName", ""),
+            "disc_number": attrs.get("discNumber", 0),
+            "track_number": attrs.get("trackNumber", 0),
+        }
+
+    def get_album_details(self, album_id: str) -> dict[str, Any] | None:
+        """Get detailed information about an album by catalog ID."""
+        url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/albums/{album_id}"
+        params: dict[str, Any] = {"include": "tracks"}
+        resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
+        resp.raise_for_status()
+
+        data = resp.json().get("data", [])
+        if not data:
+            return None
+
+        item = data[0]
+        attrs = item.get("attributes", {})
+        artwork = attrs.get("artwork", {})
+        editorial = attrs.get("editorialNotes", {})
+
+        tracks_data = (
+            item.get("relationships", {})
+            .get("tracks", {})
+            .get("data", [])
+        )
+        tracks: list[dict[str, Any]] = []
+        for t in tracks_data:
+            t_attrs = t.get("attributes", {})
+            tracks.append({
+                "id": t["id"],
+                "title": t_attrs.get("name", ""),
+                "artist": t_attrs.get("artistName", ""),
+                "duration_ms": t_attrs.get("durationInMillis", 0),
+                "track_number": t_attrs.get("trackNumber", 0),
+            })
+
+        return {
+            "id": item["id"],
+            "name": attrs.get("name", ""),
+            "artist": attrs.get("artistName", ""),
+            "genres": attrs.get("genreNames", []),
+            "release_date": attrs.get("releaseDate", ""),
+            "track_count": attrs.get("trackCount", 0),
+            "url": attrs.get("url", ""),
+            "artwork_url": artwork.get("url", ""),
+            "record_label": attrs.get("recordLabel", ""),
+            "copyright": attrs.get("copyright", ""),
+            "editorial_notes": editorial.get("standard", ""),
+            "tracks": tracks,
+        }
+
+    def get_artist_details(self, artist_id: str) -> dict[str, Any] | None:
+        """Get detailed information about an artist by catalog ID."""
+        url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/artists/{artist_id}"
+        params: dict[str, Any] = {"include": "albums"}
+        resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
+        resp.raise_for_status()
+
+        data = resp.json().get("data", [])
+        if not data:
+            return None
+
+        item = data[0]
+        attrs = item.get("attributes", {})
+        artwork = attrs.get("artwork", {})
+        editorial = attrs.get("editorialNotes", {})
+
+        albums_data = (
+            item.get("relationships", {})
+            .get("albums", {})
+            .get("data", [])
+        )
+        albums: list[dict[str, Any]] = []
+        for a in albums_data:
+            a_attrs = a.get("attributes", {})
+            albums.append({
+                "id": a["id"],
+                "name": a_attrs.get("name", ""),
+                "artist": a_attrs.get("artistName", ""),
+                "release_date": a_attrs.get("releaseDate", ""),
+            })
+
+        return {
+            "id": item["id"],
+            "name": attrs.get("name", ""),
+            "genres": attrs.get("genreNames", []),
+            "url": attrs.get("url", ""),
+            "artwork_url": artwork.get("url", ""),
+            "editorial_notes": editorial.get("standard", ""),
+            "albums": albums,
+        }
+
+    def remove_from_playlist(
+        self, playlist_id: str, track_ids: list[str]
+    ) -> None:
+        """Remove tracks from a library playlist by library track IDs."""
+        url = f"{APPLE_MUSIC_API}/me/library/playlists/{playlist_id}/tracks"
+        body = {"data": [{"id": tid, "type": "songs"} for tid in track_ids]}
+        resp = requests.delete(
+            url,
+            headers=self.auth.headers(include_user_token=True),
+            json=body,
+            timeout=30,
+        )
+        resp.raise_for_status()
+
+    def update_playlist(
+        self, playlist_id: str, name: str | None = None, description: str | None = None
+    ) -> None:
+        """Update a library playlist's name and/or description."""
+        url = f"{APPLE_MUSIC_API}/me/library/playlists/{playlist_id}"
+        attributes: dict[str, Any] = {}
+        if name is not None:
+            attributes["name"] = name
+        if description is not None:
+            attributes["description"] = description
+        body = {"attributes": attributes}
+        resp = requests.put(
+            url,
+            headers=self.auth.headers(include_user_token=True),
+            json=body,
+            timeout=30,
+        )
+        resp.raise_for_status()
+
     def add_tracks_to_playlist(
         self, playlist_id: str, track_ids: list[dict[str, str]]
     ) -> dict[str, list[dict[str, str]]]:

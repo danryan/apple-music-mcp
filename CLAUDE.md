@@ -83,6 +83,11 @@ poetry run playlist-creator examples/road_trip.md -v           # create playlist
 | `list_playlists()` | List user's library playlists |
 | `get_playlist_tracks(playlist_id, limit)` | Get all tracks in a playlist |
 | `search_playlist(playlist_id, query)` | Search within a playlist by title/artist/album |
+| `get_song_details(song_id)` | Get detailed song metadata by catalog ID |
+| `get_album_details(album_id)` | Get album metadata + track listing by catalog ID |
+| `get_artist_details(artist_id)` | Get artist metadata + albums by catalog ID |
+| `remove_from_playlist(playlist_id, track_ids)` | Remove tracks from a library playlist |
+| `update_playlist(playlist_id, name, description)` | Rename or update a playlist's description |
 | `search_library(query, types, limit)` | Search user's library (songs, albums, artists, playlists) |
 | `get_library_songs(limit, offset)` | Browse library songs with pagination |
 | `get_library_albums(limit, offset)` | Browse library albums with pagination |
