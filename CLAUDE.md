@@ -93,6 +93,7 @@ poetry run playlist-creator examples/road_trip.md -v           # create playlist
 | `get_library_songs(limit, offset)` | Browse library songs with pagination |
 | `get_library_albums(limit, offset)` | Browse library albums with pagination |
 | `get_library_artists(limit, offset)` | Browse library artists with pagination |
+| `get_heavy_rotation(limit)` | User's most frequently played items |
 | `get_recently_played(limit)` | Recently played albums/playlists/stations |
 | `get_recommendations(limit)` | Personalized recommendation groups |
 | `create_playlist_from_markdown(markdown, name, description, dry_run)` | Parse markdown and create playlist |

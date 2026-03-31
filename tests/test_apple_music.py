@@ -513,6 +513,81 @@ class TestUpdatePlaylist:
             client.update_playlist("p.abc123", name="New Name")
 
 
+class TestGetHeavyRotation:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_items(self, mock_get: MagicMock, client: AppleMusicClient) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "l.abc",
+                    "type": "albums",
+                    "attributes": {
+                        "name": "SAW II",
+                        "artistName": "Aphex Twin",
+                    },
+                },
+                {
+                    "id": "pl.xyz",
+                    "type": "playlists",
+                    "attributes": {
+                        "name": "Chill Vibes",
+                    },
+                },
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = client.get_heavy_rotation(limit=10)
+        assert len(result) == 2
+        assert result[0]["id"] == "l.abc"
+        assert result[0]["type"] == "albums"
+        assert result[0]["name"] == "SAW II"
+        assert result[0]["artist"] == "Aphex Twin"
+        assert result[1]["id"] == "pl.xyz"
+        assert result[1]["name"] == "Chill Vibes"
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_empty_response(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": []}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = client.get_heavy_rotation()
+        assert result == []
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_passes_limit_param(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": []}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        client.get_heavy_rotation(limit=5)
+        call_kwargs = mock_get.call_args
+        assert call_kwargs.kwargs["params"]["limit"] == 5
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_uses_user_token(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": []}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        client.get_heavy_rotation()
+        call_kwargs = mock_get.call_args
+        headers = call_kwargs.kwargs["headers"]
+        assert "Music-User-Token" in headers
+
+
 class TestAddToLibrary:
     @patch("apple_music_mcp.apple_music.requests.post")
     def test_sends_correct_request(

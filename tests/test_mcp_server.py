@@ -13,6 +13,7 @@ from apple_music_mcp.mcp_server import (
     create_playlist_from_markdown,
     get_album_details,
     get_artist_details,
+    get_heavy_rotation,
     get_library_albums,
     get_library_artists,
     get_library_songs,
@@ -324,6 +325,43 @@ class TestGetLibraryArtists:
         result = get_library_artists(limit=10)
         assert len(result["artists"]) == 1
         assert result["artists"][0]["name"] == "Aphex Twin"
+
+
+class TestGetHeavyRotation:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_items(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "l.abc",
+                    "type": "albums",
+                    "attributes": {
+                        "name": "SAW II",
+                        "artistName": "Aphex Twin",
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_heavy_rotation(limit=5)
+        assert len(result["items"]) == 1
+        assert result["items"][0]["name"] == "SAW II"
+        assert result["items"][0]["type"] == "albums"
+
+    def test_api_error_handled(self, mock_env):
+        import requests
+
+        client = mcp_mod._get_client()
+        mock_resp = MagicMock()
+        mock_resp.status_code = 401
+        error = requests.HTTPError(response=mock_resp)
+        with patch.object(client, "get_heavy_rotation", side_effect=error):
+            mcp_mod._client = client
+            with pytest.raises(ValueError, match="User token expired"):
+                get_heavy_rotation()
 
 
 class TestGetRecentlyPlayed:

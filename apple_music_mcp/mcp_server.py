@@ -358,6 +358,24 @@ def get_library_artists(limit: int = 25, offset: int = 0) -> dict[str, object]:
 
 
 @mcp.tool()
+def get_heavy_rotation(limit: int = 10) -> dict[str, object]:
+    """Get the user's heavy rotation (most frequently played items).
+
+    Args:
+        limit: Number of items to return (1-25, default 10).
+    """
+    logger.info("get_heavy_rotation limit=%d", limit)
+    try:
+        client = _get_client()
+        items = client.get_heavy_rotation(limit=limit)
+        logger.info("get_heavy_rotation returned %d items", len(items))
+        return {"items": items}
+    except Exception as e:
+        logger.error("get_heavy_rotation failed: %s", e)
+        raise ValueError(_handle_api_error(e)) from e
+
+
+@mcp.tool()
 def get_recently_played(limit: int = 10) -> dict[str, object]:
     """Get the user's recently played items on Apple Music.
 

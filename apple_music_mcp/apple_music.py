@@ -333,6 +333,31 @@ class AppleMusicClient:
             )
         return results
 
+    def get_heavy_rotation(self, limit: int = 10) -> list[dict[str, Any]]:
+        """Get the user's heavy rotation (most frequently played) items."""
+        url = f"{APPLE_MUSIC_API}/me/history/heavy-rotation"
+        params: dict[str, Any] = {"limit": limit}
+        resp = requests.get(
+            url,
+            headers=self.auth.headers(include_user_token=True),
+            params=params,
+            timeout=30,
+        )
+        resp.raise_for_status()
+
+        results: list[dict[str, Any]] = []
+        for item in resp.json().get("data", []):
+            attrs = item.get("attributes", {})
+            results.append(
+                {
+                    "id": item["id"],
+                    "type": item.get("type", ""),
+                    "name": attrs.get("name", ""),
+                    "artist": attrs.get("artistName", ""),
+                }
+            )
+        return results
+
     def get_recently_played(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get recently played items (albums, playlists, stations)."""
         url = f"{APPLE_MUSIC_API}/me/recent/played"
