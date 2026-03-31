@@ -9,7 +9,7 @@ from apple_music_mcp.auth import AppleMusicAuth, AppleMusicConfig
 
 
 @pytest.fixture
-def config():
+def config() -> AppleMusicConfig:
     # Minimal EC256 test key (not a real key, just for JWT encoding tests)
     from cryptography.hazmat.primitives.asymmetric import ec
     from cryptography.hazmat.primitives import serialization
@@ -30,29 +30,29 @@ def config():
 
 
 @pytest.fixture
-def auth(config):
+def auth(config: AppleMusicConfig) -> AppleMusicAuth:
     return AppleMusicAuth(config, user_token="test-user-token")
 
 
 @pytest.fixture
-def client(auth):
+def client(auth: AppleMusicAuth) -> AppleMusicClient:
     return AppleMusicClient(auth)
 
 
-def test_developer_token_generated(auth):
+def test_developer_token_generated(auth: AppleMusicAuth) -> None:
     token = auth.developer_token
     assert isinstance(token, str)
     assert len(token) > 0
 
 
-def test_developer_token_cached(auth):
+def test_developer_token_cached(auth: AppleMusicAuth) -> None:
     token1 = auth.developer_token
     token2 = auth.developer_token
     assert token1 == token2
 
 
 @patch("apple_music_mcp.apple_music.requests.get")
-def test_search_track_found(mock_get, client):
+def test_search_track_found(mock_get: MagicMock, client: AppleMusicClient) -> None:
     mock_resp = MagicMock()
     mock_resp.json.return_value = {
         "results": {
@@ -79,7 +79,7 @@ def test_search_track_found(mock_get, client):
 
 
 @patch("apple_music_mcp.apple_music.requests.get")
-def test_search_track_not_found(mock_get, client):
+def test_search_track_not_found(mock_get: MagicMock, client: AppleMusicClient) -> None:
     mock_resp = MagicMock()
     mock_resp.json.return_value = {"results": {}}
     mock_resp.raise_for_status = MagicMock()
@@ -90,7 +90,7 @@ def test_search_track_not_found(mock_get, client):
 
 
 @patch("apple_music_mcp.apple_music.requests.post")
-def test_create_playlist(mock_post, client):
+def test_create_playlist(mock_post: MagicMock, client: AppleMusicClient) -> None:
     mock_resp = MagicMock()
     mock_resp.json.return_value = {
         "data": [{"id": "p.abc123", "type": "library-playlists"}]
@@ -107,7 +107,7 @@ def test_create_playlist(mock_post, client):
 
 @patch("apple_music_mcp.apple_music.requests.get")
 @patch("apple_music_mcp.apple_music.requests.post")
-def test_add_tracks_to_playlist(mock_post, mock_get, client):
+def test_add_tracks_to_playlist(mock_post: MagicMock, mock_get: MagicMock, client: AppleMusicClient) -> None:
     # Mock GET for get_playlist_tracks (returns empty playlist)
     mock_get_resp = MagicMock()
     mock_get_resp.status_code = 404

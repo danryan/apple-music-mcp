@@ -6,7 +6,7 @@ from typing import Any
 
 import requests
 
-from .auth import AppleMusicAuth, AppleMusicConfig  # noqa: F401 — re-exported
+from .auth import AppleMusicAuth, AppleMusicConfig as AppleMusicConfig  # noqa: F401 — re-exported
 
 APPLE_MUSIC_API = "https://api.music.apple.com/v1"
 
@@ -21,10 +21,10 @@ class AppleMusicClient:
     def storefront(self) -> str:
         return self.auth.config.storefront
 
-    def search_track(self, query: str) -> dict | None:
+    def search_track(self, query: str) -> dict[str, Any] | None:
         """Search for a song and return the first match, or None."""
         url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/search"
-        params = {"term": query, "types": "songs", "limit": 1}
+        params: dict[str, Any] = {"term": query, "types": "songs", "limit": 1}
         resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
         resp.raise_for_status()
 
@@ -39,7 +39,7 @@ class AppleMusicClient:
     ) -> str:
         """Create a new library playlist. Returns the playlist ID."""
         url = f"{APPLE_MUSIC_API}/me/library/playlists"
-        body: dict = {
+        body: dict[str, Any] = {
             "attributes": {
                 "name": name,
                 "description": description,
@@ -60,12 +60,12 @@ class AppleMusicClient:
     ) -> list[dict[str, Any]]:
         """Search the Apple Music catalog. Returns a list of result dicts."""
         url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/search"
-        params = {"term": query, "types": types, "limit": limit}
+        params: dict[str, Any] = {"term": query, "types": types, "limit": limit}
         resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
         resp.raise_for_status()
 
         data = resp.json()
-        results = []
+        results: list[dict[str, Any]] = []
         for type_key in types.split(","):
             type_key = type_key.strip()
             items = data.get("results", {}).get(type_key, {}).get("data", [])
@@ -92,7 +92,7 @@ class AppleMusicClient:
         """
         # Step 1: Search for the artist
         url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/search"
-        params = {"term": artist_name, "types": "artists", "limit": 1}
+        params: dict[str, Any] = {"term": artist_name, "types": "artists", "limit": 1}
         resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
         resp.raise_for_status()
 
@@ -110,7 +110,7 @@ class AppleMusicClient:
             f"{APPLE_MUSIC_API}/catalog/{self.storefront}"
             f"/artists/{artist_id}/view/top-songs"
         )
-        params = {"limit": limit}
+        params: dict[str, Any] = {"limit": limit}
         resp = requests.get(
             top_songs_url, headers=self.auth.headers(), params=params, timeout=30
         )
@@ -118,7 +118,7 @@ class AppleMusicClient:
 
         songs_data = resp.json()
         matched_name = artist_attrs.get("name", "").lower()
-        songs = []
+        songs: list[dict[str, Any]] = []
         for item in songs_data.get("data", []):
             attrs = item.get("attributes", {})
             song_artist = attrs.get("artistName", "")
@@ -155,7 +155,7 @@ class AppleMusicClient:
         resp.raise_for_status()
 
         data = resp.json()
-        playlists = []
+        playlists: list[dict[str, Any]] = []
         for item in data.get("data", []):
             attrs = item.get("attributes", {})
             playlists.append({
@@ -209,14 +209,14 @@ class AppleMusicClient:
     ) -> list[dict[str, Any]]:
         """Search the user's library. Returns a list of result dicts."""
         url = f"{APPLE_MUSIC_API}/me/library/search"
-        params = {"term": query, "types": types, "limit": limit}
+        params: dict[str, Any] = {"term": query, "types": types, "limit": limit}
         resp = requests.get(
             url, headers=self.auth.headers(include_user_token=True), params=params, timeout=30
         )
         resp.raise_for_status()
 
         data = resp.json()
-        results = []
+        results: list[dict[str, Any]] = []
         for type_key in types.split(","):
             type_key = type_key.strip()
             items = data.get("results", {}).get(type_key, {}).get("data", [])
@@ -242,7 +242,7 @@ class AppleMusicClient:
         )
         resp.raise_for_status()
 
-        results = []
+        results: list[dict[str, Any]] = []
         for item in resp.json().get("data", []):
             attrs = item.get("attributes", {})
             results.append({
@@ -264,7 +264,7 @@ class AppleMusicClient:
         )
         resp.raise_for_status()
 
-        results = []
+        results: list[dict[str, Any]] = []
         for item in resp.json().get("data", []):
             attrs = item.get("attributes", {})
             results.append({
@@ -285,7 +285,7 @@ class AppleMusicClient:
         )
         resp.raise_for_status()
 
-        results = []
+        results: list[dict[str, Any]] = []
         for item in resp.json().get("data", []):
             attrs = item.get("attributes", {})
             results.append({
@@ -303,7 +303,7 @@ class AppleMusicClient:
         )
         resp.raise_for_status()
 
-        results = []
+        results: list[dict[str, Any]] = []
         for item in resp.json().get("data", []):
             attrs = item.get("attributes", {})
             results.append({
@@ -323,10 +323,10 @@ class AppleMusicClient:
         )
         resp.raise_for_status()
 
-        results = []
+        results: list[dict[str, Any]] = []
         for group in resp.json().get("data", []):
             attrs = group.get("attributes", {})
-            items = []
+            items: list[dict[str, Any]] = []
             for rel in group.get("relationships", {}).get("contents", {}).get("data", []):
                 rel_attrs = rel.get("attributes", {})
                 items.append({
