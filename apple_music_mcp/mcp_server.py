@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from http import HTTPStatus
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -59,17 +60,17 @@ def _get_client() -> AppleMusicClient:
 
 def _handle_api_error(e: Exception) -> str:
     """Convert API errors to user-friendly messages."""
-    import requests
+    import requests  # noqa: PLC0415
 
     if isinstance(e, requests.HTTPError) and e.response is not None:
         status = e.response.status_code
-        if status == 401:
+        if status == HTTPStatus.UNAUTHORIZED:
             return (
                 "User token expired. Re-run get_user_token.html to obtain a new token."
             )
-        if status == 403:
+        if status == HTTPStatus.FORBIDDEN:
             return "Forbidden. Check Apple Music subscription status."
-        if status == 429:
+        if status == HTTPStatus.TOO_MANY_REQUESTS:
             retry_after = e.response.headers.get("Retry-After", "60")
             return f"Rate limited. Retry in {retry_after} seconds."
     return str(e)
@@ -99,7 +100,7 @@ def search_catalog(
 
 @mcp.tool()
 def get_artist_top_songs(
-    artist: str, limit: int = 20, lead_artist_only: bool = True
+    artist: str, limit: int = 20, *, lead_artist_only: bool = True
 ) -> dict[str, object]:
     """Get an artist's top songs on Apple Music, sorted by popularity.
 
@@ -493,6 +494,7 @@ def create_playlist_from_markdown(
     markdown: str,
     name: str | None = None,
     description: str | None = None,
+    *,
     dry_run: bool = False,
 ) -> dict[str, object]:
     """Parse a markdown string and create a playlist from it.
@@ -579,7 +581,7 @@ def create_playlist_from_markdown(
         raise ValueError(_handle_api_error(e)) from e
 
 
-def main():
+def main() -> None:
     """Run the MCP server with stdio transport."""
     logging.basicConfig(
         level=os.environ.get("LOG_LEVEL", "INFO").upper(),

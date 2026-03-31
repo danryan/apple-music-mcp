@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+_MAX_ARTIST_WORDS = 6
+
 
 @dataclass
 class Track:
@@ -114,7 +116,7 @@ def _parse_track_line(line: str) -> Track | None:
             artist = match.group(1).strip()
             title = match.group(2).strip()
             # Heuristic: skip if artist portion is very long (likely prose)
-            if len(artist.split()) <= 6:
+            if len(artist.split()) <= _MAX_ARTIST_WORDS:
                 return Track(artist=artist, title=title)
 
     return None
