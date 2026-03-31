@@ -49,7 +49,7 @@ def _build_client() -> AppleMusicClient:
 
 def _search_track(
     client: AppleMusicClient, track: Track, *, verbose: bool
-) -> dict | None:
+) -> dict[str, str] | None:
     result = client.search_track(track.search_query())
     if result:
         attrs = result["attributes"]
@@ -78,7 +78,7 @@ def run(args: argparse.Namespace) -> None:
     client = _build_client()
 
     print("\nSearching Apple Music...")
-    found_tracks: list[dict] = []
+    found_tracks: list[dict[str, str]] = []
     for track in playlist.tracks:
         result = _search_track(client, track, verbose=args.verbose)
         if result:

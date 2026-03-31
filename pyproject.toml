@@ -15,11 +15,12 @@ python-dotenv = "^1.0"
 requests = "^2.33"
 
 [tool.poetry.group.dev.dependencies]
+mypy = "*"
 pytest = "^8.0"
 pytest-cov = "*"
 pytest-mock = "^3.0"
-mypy = "*"
 ruff = "*"
+types-requests = "^2.33.0.20260327"
 
 [tool.poetry.scripts]
 playlist-creator = "apple_music_mcp.cli:main"

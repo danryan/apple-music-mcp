@@ -35,7 +35,8 @@ class AppleMusicClient:
         data = resp.json()
         songs = data.get("results", {}).get("songs", {}).get("data", [])
         if songs:
-            return songs[0]
+            result: dict[str, Any] = songs[0]
+            return result
         return None
 
     def create_playlist(self, name: str, description: str = "") -> str:
@@ -55,7 +56,8 @@ class AppleMusicClient:
         )
         resp.raise_for_status()
         playlist_data = resp.json()["data"][0]
-        return playlist_data["id"]
+        playlist_id: str = playlist_data["id"]
+        return playlist_id
 
     def search_catalog(
         self, query: str, limit: int = 10, types: str = "songs"
@@ -114,9 +116,12 @@ class AppleMusicClient:
             f"{APPLE_MUSIC_API}/catalog/{self.storefront}"
             f"/artists/{artist_id}/view/top-songs"
         )
-        params: dict[str, Any] = {"limit": limit}
+        top_songs_params: dict[str, Any] = {"limit": limit}
         resp = requests.get(
-            top_songs_url, headers=self.auth.headers(), params=params, timeout=30
+            top_songs_url,
+            headers=self.auth.headers(),
+            params=top_songs_params,
+            timeout=30,
         )
         resp.raise_for_status()
 
