@@ -588,6 +588,157 @@ class TestGetHeavyRotation:
         assert "Music-User-Token" in headers
 
 
+class TestGetCharts:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_chart_entries(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "results": {
+                "songs": [
+                    {
+                        "name": "Top Songs",
+                        "chart": "most-played",
+                        "data": [
+                            {
+                                "id": "111",
+                                "type": "songs",
+                                "attributes": {
+                                    "name": "APT.",
+                                    "artistName": "ROSÉ & Bruno Mars",
+                                    "albumName": "rosie",
+                                    "durationInMillis": 170000,
+                                    "genreNames": ["Pop"],
+                                    "releaseDate": "2024-10-18",
+                                    "url": "https://music.apple.com/us/song/111",
+                                },
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = client.get_charts(types="songs", limit=10)
+        assert len(result) == 1
+        assert result[0]["chart_name"] == "Top Songs"
+        assert result[0]["chart"] == "most-played"
+        assert len(result[0]["entries"]) == 1
+        entry = result[0]["entries"][0]
+        assert entry["id"] == "111"
+        assert entry["title"] == "APT."
+        assert entry["artist"] == "ROSÉ & Bruno Mars"
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_multiple_chart_types(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "results": {
+                "songs": [
+                    {
+                        "name": "Top Songs",
+                        "chart": "most-played",
+                        "data": [
+                            {
+                                "id": "111",
+                                "type": "songs",
+                                "attributes": {
+                                    "name": "Song",
+                                    "artistName": "Artist",
+                                    "albumName": "Album",
+                                    "durationInMillis": 200000,
+                                    "genreNames": [],
+                                    "releaseDate": "",
+                                    "url": "",
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "albums": [
+                    {
+                        "name": "Top Albums",
+                        "chart": "most-played",
+                        "data": [
+                            {
+                                "id": "222",
+                                "type": "albums",
+                                "attributes": {
+                                    "name": "Album",
+                                    "artistName": "Artist",
+                                    "albumName": "",
+                                    "durationInMillis": 0,
+                                    "genreNames": [],
+                                    "releaseDate": "",
+                                    "url": "",
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = client.get_charts(types="songs,albums", limit=10)
+        assert len(result) == 2
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_empty_results(self, mock_get: MagicMock, client: AppleMusicClient) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"results": {}}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = client.get_charts(types="songs", limit=10)
+        assert result == []
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_passes_genre_param(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"results": {}}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        client.get_charts(types="songs", limit=20, genre="14")
+        call_kwargs = mock_get.call_args
+        assert call_kwargs.kwargs["params"]["genre"] == "14"
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_no_genre_param_when_none(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"results": {}}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        client.get_charts(types="songs", limit=10)
+        call_kwargs = mock_get.call_args
+        assert "genre" not in call_kwargs.kwargs["params"]
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_uses_storefront(
+        self, mock_get: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"results": {}}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        client.get_charts(types="songs", limit=10)
+        call_url = mock_get.call_args.args[0]
+        assert "/catalog/us/charts" in call_url
+
+
 class TestAddToLibrary:
     @patch("apple_music_mcp.apple_music.requests.post")
     def test_sends_correct_request(

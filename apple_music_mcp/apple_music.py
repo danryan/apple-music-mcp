@@ -363,6 +363,52 @@ class AppleMusicClient:
             )
         return results
 
+    def get_charts(
+        self,
+        types: str = "songs",
+        limit: int = 20,
+        genre: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Get Apple Music charts (top songs, albums, playlists) for the storefront.
+
+        Returns a list of chart groups, each with a name and entries.
+        """
+        url = f"{APPLE_MUSIC_API}/catalog/{self.storefront}/charts"
+        params: dict[str, Any] = {"types": types, "limit": limit}
+        if genre is not None:
+            params["genre"] = genre
+        resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
+        resp.raise_for_status()
+
+        results: list[dict[str, Any]] = []
+        for raw_key in types.split(","):
+            type_key = raw_key.strip()
+            chart_groups = resp.json().get("results", {}).get(type_key, [])
+            for group in chart_groups:
+                entries: list[dict[str, Any]] = []
+                for item in group.get("data", []):
+                    attrs = item.get("attributes", {})
+                    entries.append(
+                        {
+                            "id": item["id"],
+                            "title": attrs.get("name", ""),
+                            "artist": attrs.get("artistName", ""),
+                            "album": attrs.get("albumName", ""),
+                            "duration_ms": attrs.get("durationInMillis", 0),
+                            "genres": attrs.get("genreNames", []),
+                            "release_date": attrs.get("releaseDate", ""),
+                            "url": attrs.get("url", ""),
+                        }
+                    )
+                results.append(
+                    {
+                        "chart_name": group.get("name", ""),
+                        "chart": group.get("chart", ""),
+                        "entries": entries,
+                    }
+                )
+        return results
+
     def get_recently_played(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get recently played items (albums, playlists, stations)."""
         url = f"{APPLE_MUSIC_API}/me/recent/played"

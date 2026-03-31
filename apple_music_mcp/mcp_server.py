@@ -358,6 +358,30 @@ def get_library_artists(limit: int = 25, offset: int = 0) -> dict[str, object]:
 
 
 @mcp.tool()
+def get_charts(
+    types: str = "songs", limit: int = 20, genre: str | None = None
+) -> dict[str, object]:
+    """Get Apple Music charts (top songs, top albums, top playlists) for the storefront.
+
+    Browse what's currently popular on Apple Music.
+
+    Args:
+        types: Comma-separated chart types: songs, albums, playlists (default "songs").
+        limit: Number of entries per chart (1-50, default 20).
+        genre: Optional Apple Music genre ID to filter charts (e.g. "14" for Pop).
+    """
+    logger.info("get_charts types=%s limit=%d genre=%s", types, limit, genre)
+    try:
+        client = _get_client()
+        charts = client.get_charts(types=types, limit=limit, genre=genre)
+        logger.info("get_charts returned %d chart groups", len(charts))
+        return {"charts": charts}
+    except Exception as e:
+        logger.error("get_charts failed: %s", e)
+        raise ValueError(_handle_api_error(e)) from e
+
+
+@mcp.tool()
 def get_heavy_rotation(limit: int = 10) -> dict[str, object]:
     """Get the user's heavy rotation (most frequently played items).
 
