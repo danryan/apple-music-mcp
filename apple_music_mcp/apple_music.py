@@ -541,6 +541,18 @@ class AppleMusicClient:
         )
         resp.raise_for_status()
 
+    def add_to_library(self, song_ids: list[str]) -> None:
+        """Add songs to the user's library by catalog IDs."""
+        url = f"{APPLE_MUSIC_API}/me/library"
+        body: dict[str, Any] = {"ids": {"songs": song_ids}}
+        resp = requests.post(
+            url,
+            headers=self.auth.headers(include_user_token=True),
+            json=body,
+            timeout=30,
+        )
+        resp.raise_for_status()
+
     def add_tracks_to_playlist(
         self, playlist_id: str, track_ids: list[dict[str, str]]
     ) -> dict[str, list[dict[str, str]]]:

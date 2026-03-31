@@ -511,3 +511,45 @@ class TestUpdatePlaylist:
 
         with pytest.raises(req.HTTPError):
             client.update_playlist("p.abc123", name="New Name")
+
+
+class TestAddToLibrary:
+    @patch("apple_music_mcp.apple_music.requests.post")
+    def test_sends_correct_request(
+        self, mock_post: MagicMock, client: AppleMusicClient
+    ) -> None:
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_post.return_value = mock_resp
+
+        client.add_to_library(["111", "222"])
+
+        mock_post.assert_called_once()
+        call_kwargs = mock_post.call_args
+        assert "me/library" in call_kwargs.args[0]
+        body = call_kwargs.kwargs["json"]
+        assert body == {"ids": {"songs": ["111", "222"]}}
+
+    @patch("apple_music_mcp.apple_music.requests.post")
+    def test_single_song(self, mock_post: MagicMock, client: AppleMusicClient) -> None:
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_post.return_value = mock_resp
+
+        client.add_to_library(["999"])
+
+        body = mock_post.call_args.kwargs["json"]
+        assert body == {"ids": {"songs": ["999"]}}
+
+    @patch("apple_music_mcp.apple_music.requests.post")
+    def test_http_error_propagates(
+        self, mock_post: MagicMock, client: AppleMusicClient
+    ) -> None:
+        import requests as req
+
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status.side_effect = req.HTTPError(response=mock_resp)
+        mock_post.return_value = mock_resp
+
+        with pytest.raises(req.HTTPError):
+            client.add_to_library(["111"])

@@ -7,6 +7,7 @@ import pytest
 
 import apple_music_mcp.mcp_server as mcp_mod
 from apple_music_mcp.mcp_server import (
+    add_to_library,
     add_to_playlist,
     create_playlist,
     create_playlist_from_markdown,
@@ -597,6 +598,32 @@ class TestUpdatePlaylist:
             mcp_mod._client = client
             with pytest.raises(ValueError, match=r"Rate limited.*30 seconds"):
                 update_playlist("p.abc123", name="X")
+
+
+class TestAddToLibrary:
+    def test_returns_count(self, mock_env):
+        client = mcp_mod._get_client()
+        with patch.object(client, "add_to_library") as mock_add:
+            mcp_mod._client = client
+            result = add_to_library(["111", "222"])
+        assert result["added"] == 2
+        mock_add.assert_called_once_with(["111", "222"])
+
+    def test_empty_list(self, mock_env):
+        result = add_to_library([])
+        assert result["added"] == 0
+
+    def test_api_error_handled(self, mock_env):
+        import requests
+
+        client = mcp_mod._get_client()
+        mock_resp = MagicMock()
+        mock_resp.status_code = 401
+        error = requests.HTTPError(response=mock_resp)
+        with patch.object(client, "add_to_library", side_effect=error):
+            mcp_mod._client = client
+            with pytest.raises(ValueError, match="User token expired"):
+                add_to_library(["111"])
 
 
 class TestErrorHandling:

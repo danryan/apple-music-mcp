@@ -159,6 +159,26 @@ def create_playlist(name: str, description: str = "") -> dict[str, object]:
 
 
 @mcp.tool()
+def add_to_library(song_ids: list[str]) -> dict[str, object]:
+    """Add songs to the user's Apple Music library by catalog IDs.
+
+    Args:
+        song_ids: List of Apple Music catalog song IDs to save to library.
+    """
+    logger.info("add_to_library songs=%d", len(song_ids))
+    try:
+        if not song_ids:
+            return {"added": 0}
+        client = _get_client()
+        client.add_to_library(song_ids)
+        logger.info("add_to_library added %d songs", len(song_ids))
+        return {"added": len(song_ids)}
+    except Exception as e:
+        logger.error("add_to_library failed: %s", e)
+        raise ValueError(_handle_api_error(e)) from e
+
+
+@mcp.tool()
 def add_to_playlist(playlist_id: str, song_ids: list[str]) -> dict[str, object]:
     """Add songs to an existing playlist by catalog IDs.
 

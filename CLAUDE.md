@@ -78,6 +78,7 @@ poetry run playlist-creator examples/road_trip.md -v           # create playlist
 |---|---|
 | `search_catalog(query, limit, types)` | Search Apple Music catalog |
 | `get_artist_top_songs(artist, limit, lead_artist_only)` | Get an artist's top songs by popularity |
+| `add_to_library(song_ids)` | Add catalog songs to user's library |
 | `create_playlist(name, description)` | Create a library playlist |
 | `add_to_playlist(playlist_id, song_ids)` | Add songs by catalog ID (skips duplicates) |
 | `list_playlists()` | List user's library playlists |
