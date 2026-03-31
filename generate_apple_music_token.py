@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Generate Apple Music API developer tokens."""
 
+from __future__ import annotations
+
 import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
+import jwt
 from dotenv import load_dotenv
 
 from apple_music_mcp.auth import AppleMusicConfig
@@ -13,7 +17,7 @@ from apple_music_mcp.auth import AppleMusicConfig
 load_dotenv()
 
 
-def generate_apple_music_token():
+def generate_apple_music_token() -> str:
     """Generate an Apple Music developer token."""
     # Get configuration from environment variables
     team_id = os.environ.get("APPLE_TEAM_ID", "YOUR_TEAM_ID")
@@ -38,12 +42,6 @@ def generate_apple_music_token():
         private_key=private_key,
     )
 
-    # Override the token expiry to 180 days (as in the Node.js version)
-    # We'll generate the token manually to match the Node.js behavior
-    from typing import Any
-
-    import jwt
-
     now = time.time()
     payload: dict[str, Any] = {
         "iss": config.team_id,
@@ -66,7 +64,7 @@ def generate_apple_music_token():
     return token
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     try:
         token = generate_apple_music_token()

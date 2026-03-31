@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from http import HTTPStatus
+from typing import TYPE_CHECKING, Any
 
 import requests
 
-from .auth import AppleMusicAuth
 from .auth import AppleMusicConfig as AppleMusicConfig
+
+if TYPE_CHECKING:
+    from .auth import AppleMusicAuth
 
 APPLE_MUSIC_API = "https://api.music.apple.com/v1"
 
@@ -65,8 +68,8 @@ class AppleMusicClient:
 
         data = resp.json()
         results: list[dict[str, Any]] = []
-        for type_key in types.split(","):
-            type_key = type_key.strip()
+        for raw_key in types.split(","):
+            type_key = raw_key.strip()
             items = data.get("results", {}).get(type_key, {}).get("data", [])
             for item in items:
                 attrs = item.get("attributes", {})
@@ -85,7 +88,7 @@ class AppleMusicClient:
         return results
 
     def get_artist_top_songs(
-        self, artist_name: str, limit: int = 20, lead_artist_only: bool = True
+        self, artist_name: str, limit: int = 20, *, lead_artist_only: bool = True
     ) -> dict[str, Any]:
         """Search for an artist by name, then fetch their top songs.
 
@@ -183,7 +186,7 @@ class AppleMusicClient:
                 params=params,
                 timeout=30,
             )
-            if resp.status_code == 404:
+            if resp.status_code == HTTPStatus.NOT_FOUND:
                 return tracks
             resp.raise_for_status()
             data = resp.json()
@@ -230,8 +233,8 @@ class AppleMusicClient:
 
         data = resp.json()
         results: list[dict[str, Any]] = []
-        for type_key in types.split(","):
-            type_key = type_key.strip()
+        for raw_key in types.split(","):
+            type_key = raw_key.strip()
             items = data.get("results", {}).get(type_key, {}).get("data", [])
             for item in items:
                 attrs = item.get("attributes", {})

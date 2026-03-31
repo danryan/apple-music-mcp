@@ -96,6 +96,26 @@ poetry run playlist-creator examples/road_trip.md -v           # create playlist
 | `get_recommendations(limit)` | Personalized recommendation groups |
 | `create_playlist_from_markdown(markdown, name, description, dry_run)` | Parse markdown and create playlist |
 
+## Tooling
+
+- Linter/formatter: `ruff check . && ruff format .` before committing
+- Type checker: `mypy --strict` — all code must pass
+- Tests: `pytest` — do not reduce coverage below threshold
+- Never disable ruff or mypy rules without a comment explaining why
+
+## Patterns
+
+- EAFP over LBYL — prefer `try/except` over pre-condition checks
+- Use `itertools` and `functools` before writing manual loops
+- Prefer generators over building intermediate lists
+- Prefer `Protocol` over `ABC` for structural typing
+- Prefer `dataclasses` or `TypedDict` over plain dicts for structured data
+- Prefer `Enum` over string literals for fixed sets of values
+- Use keyword-only args or enums instead of boolean positional arguments
+- Raise specific exceptions — never `raise Exception(...)`
+- Define custom exceptions per domain; inherit from a project base exception
+- No `print()` for logging — use the `logging` module
+
 ## Testing
 
 **You MUST follow test-driven development (TDD). No exceptions.** Do not write feature code until a failing test exists for it.
@@ -139,3 +159,7 @@ When making changes that affect project structure, MCP tools, CLI commands, env 
 - Markdown format: `# Playlist Name` heading, `- Artist - Title` track lines
 - Error handling: MCP tools convert API errors to user-friendly messages (401 → token expired, 429 → rate limited)
 - Dependencies managed with Poetry (`pyproject.toml`)
+- Environment variables: loaded via `python-dotenv`; document all vars in `.env.example`
+- Tests: mirror source layout under `tests/`; one test file per source module
+- Commits: conventional commits (`feat:`, `fix:`, `chore:`, etc.)
+ 

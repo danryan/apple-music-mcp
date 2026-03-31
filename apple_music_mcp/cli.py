@@ -47,7 +47,9 @@ def _build_client() -> AppleMusicClient:
     return AppleMusicClient(auth)
 
 
-def _search_track(client: AppleMusicClient, track: Track, verbose: bool) -> dict | None:
+def _search_track(
+    client: AppleMusicClient, track: Track, *, verbose: bool
+) -> dict | None:
     result = client.search_track(track.search_query())
     if result:
         attrs = result["attributes"]
