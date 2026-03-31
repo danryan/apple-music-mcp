@@ -10,15 +10,20 @@ from apple_music_mcp.mcp_server import (
     add_to_playlist,
     create_playlist,
     create_playlist_from_markdown,
+    get_album_details,
+    get_artist_details,
     get_library_albums,
     get_library_artists,
     get_library_songs,
     get_playlist_tracks,
     get_recently_played,
     get_recommendations,
+    get_song_details,
     list_playlists,
+    remove_from_playlist,
     search_catalog,
     search_library,
+    update_playlist,
 )
 
 
@@ -484,6 +489,196 @@ class TestCreatePlaylistFromMarkdown:
         result = create_playlist_from_markdown(md)
         assert "error" in result
         assert len(result["not_found"]) == 1
+
+
+class TestGetSongDetails:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_details(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "999",
+                    "type": "songs",
+                    "attributes": {
+                        "name": "Rhubarb",
+                        "artistName": "Aphex Twin",
+                        "albumName": "SAW II",
+                        "durationInMillis": 312000,
+                        "genreNames": ["Electronic"],
+                        "releaseDate": "1994-11-07",
+                        "url": "https://music.apple.com/us/song/999",
+                        "hasLyrics": False,
+                        "previews": [{"url": "https://preview.example.com/rhubarb.m4a"}],
+                        "artwork": {"url": "https://artwork.example.com/rhubarb.jpg", "width": 3000, "height": 3000},
+                        "isrc": "GBAFL9400099",
+                        "composerName": "Richard D. James",
+                        "discNumber": 1,
+                        "trackNumber": 3,
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_song_details("999")
+        assert result["song"]["id"] == "999"
+        assert result["song"]["title"] == "Rhubarb"
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_not_found(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": []}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_song_details("nonexistent")
+        assert "error" in result
+
+
+class TestGetAlbumDetails:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_details(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "888",
+                    "type": "albums",
+                    "attributes": {
+                        "name": "SAW II",
+                        "artistName": "Aphex Twin",
+                        "genreNames": ["Electronic"],
+                        "releaseDate": "1994-11-07",
+                        "trackCount": 24,
+                        "url": "https://music.apple.com/us/album/888",
+                        "artwork": {"url": "https://artwork.example.com/saw2.jpg", "width": 3000, "height": 3000},
+                        "recordLabel": "Warp Records",
+                        "copyright": "1994 Warp Records",
+                        "editorialNotes": {"standard": "A masterpiece."},
+                    },
+                    "relationships": {
+                        "tracks": {
+                            "data": [
+                                {
+                                    "id": "999",
+                                    "type": "songs",
+                                    "attributes": {
+                                        "name": "Rhubarb",
+                                        "artistName": "Aphex Twin",
+                                        "durationInMillis": 312000,
+                                        "trackNumber": 3,
+                                    },
+                                }
+                            ]
+                        }
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_album_details("888")
+        assert result["album"]["id"] == "888"
+        assert result["album"]["name"] == "SAW II"
+        assert len(result["album"]["tracks"]) == 1
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_not_found(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": []}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_album_details("nonexistent")
+        assert "error" in result
+
+
+class TestGetArtistDetails:
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_returns_details(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "data": [
+                {
+                    "id": "777",
+                    "type": "artists",
+                    "attributes": {
+                        "name": "Aphex Twin",
+                        "genreNames": ["Electronic"],
+                        "url": "https://music.apple.com/us/artist/777",
+                        "artwork": {"url": "https://artwork.example.com/aphex.jpg", "width": 3000, "height": 3000},
+                        "editorialNotes": {"standard": "Pioneering electronic artist."},
+                    },
+                    "relationships": {
+                        "albums": {
+                            "data": [
+                                {
+                                    "id": "888",
+                                    "type": "albums",
+                                    "attributes": {
+                                        "name": "SAW II",
+                                        "artistName": "Aphex Twin",
+                                        "releaseDate": "1994-11-07",
+                                    },
+                                }
+                            ]
+                        }
+                    },
+                }
+            ]
+        }
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_artist_details("777")
+        assert result["artist"]["id"] == "777"
+        assert result["artist"]["name"] == "Aphex Twin"
+        assert len(result["artist"]["albums"]) == 1
+
+    @patch("apple_music_mcp.apple_music.requests.get")
+    def test_not_found(self, mock_get, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": []}
+        mock_resp.raise_for_status = MagicMock()
+        mock_get.return_value = mock_resp
+
+        result = get_artist_details("nonexistent")
+        assert "error" in result
+
+
+class TestRemoveFromPlaylist:
+    @patch("apple_music_mcp.apple_music.requests.delete")
+    def test_removes_tracks(self, mock_delete, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_delete.return_value = mock_resp
+
+        result = remove_from_playlist("p.abc123", ["i.track1", "i.track2"])
+        assert result["removed"] == 2
+        mock_delete.assert_called_once()
+
+    def test_empty_list(self, mock_env):
+        result = remove_from_playlist("p.abc123", [])
+        assert result["removed"] == 0
+
+
+class TestUpdatePlaylist:
+    @patch("apple_music_mcp.apple_music.requests.put")
+    def test_updates_name_and_description(self, mock_put, mock_env):
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_put.return_value = mock_resp
+
+        result = update_playlist("p.abc123", name="New Name", description="New desc")
+        assert result["updated"] is True
+        mock_put.assert_called_once()
+
+    def test_no_changes(self, mock_env):
+        with pytest.raises(ValueError, match="at least one"):
+            update_playlist("p.abc123")
 
 
 class TestErrorHandling:

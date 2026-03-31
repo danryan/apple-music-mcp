@@ -357,6 +357,116 @@ def get_recommendations(limit: int = 5) -> dict[str, object]:
 
 
 @mcp.tool()
+def get_song_details(song_id: str) -> dict[str, object]:
+    """Get detailed information about a song by its Apple Music catalog ID.
+
+    Returns rich metadata including lyrics availability, preview URL, artwork,
+    ISRC, composer, and more.
+
+    Args:
+        song_id: Apple Music catalog song ID.
+    """
+    logger.info("get_song_details song_id=%s", song_id)
+    try:
+        client = _get_client()
+        result = client.get_song_details(song_id)
+        if result is None:
+            return {"error": f"Song not found: {song_id}"}
+        return {"song": result}
+    except Exception as e:
+        logger.error("get_song_details failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def get_album_details(album_id: str) -> dict[str, object]:
+    """Get detailed information about an album by its Apple Music catalog ID.
+
+    Returns album metadata including track listing, artwork, editorial notes,
+    record label, and more.
+
+    Args:
+        album_id: Apple Music catalog album ID.
+    """
+    logger.info("get_album_details album_id=%s", album_id)
+    try:
+        client = _get_client()
+        result = client.get_album_details(album_id)
+        if result is None:
+            return {"error": f"Album not found: {album_id}"}
+        return {"album": result}
+    except Exception as e:
+        logger.error("get_album_details failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def get_artist_details(artist_id: str) -> dict[str, object]:
+    """Get detailed information about an artist by their Apple Music catalog ID.
+
+    Returns artist metadata including genres, editorial notes, artwork, and albums.
+
+    Args:
+        artist_id: Apple Music catalog artist ID.
+    """
+    logger.info("get_artist_details artist_id=%s", artist_id)
+    try:
+        client = _get_client()
+        result = client.get_artist_details(artist_id)
+        if result is None:
+            return {"error": f"Artist not found: {artist_id}"}
+        return {"artist": result}
+    except Exception as e:
+        logger.error("get_artist_details failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def remove_from_playlist(playlist_id: str, track_ids: list[str]) -> dict[str, object]:
+    """Remove songs from a library playlist.
+
+    Args:
+        playlist_id: The library playlist ID.
+        track_ids: List of library track IDs to remove.
+    """
+    logger.info("remove_from_playlist playlist_id=%s tracks=%d", playlist_id, len(track_ids))
+    try:
+        if not track_ids:
+            return {"removed": 0}
+        client = _get_client()
+        client.remove_from_playlist(playlist_id, track_ids)
+        logger.info("remove_from_playlist removed %d tracks", len(track_ids))
+        return {"removed": len(track_ids)}
+    except Exception as e:
+        logger.error("remove_from_playlist failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
+def update_playlist(
+    playlist_id: str, name: str | None = None, description: str | None = None
+) -> dict[str, object]:
+    """Update a library playlist's name and/or description.
+
+    Args:
+        playlist_id: The library playlist ID.
+        name: New name for the playlist (optional).
+        description: New description for the playlist (optional).
+    """
+    logger.info("update_playlist playlist_id=%s name=%r", playlist_id, name)
+    try:
+        if name is None and description is None:
+            raise ValueError("Provide at least one of name or description to update.")
+        client = _get_client()
+        client.update_playlist(playlist_id, name=name, description=description)
+        logger.info("update_playlist updated %s", playlist_id)
+        return {"updated": True, "playlist_id": playlist_id}
+    except Exception as e:
+        logger.error("update_playlist failed: %s", e)
+        raise ValueError(_handle_api_error(e))
+
+
+@mcp.tool()
 def create_playlist_from_markdown(
     markdown: str,
     name: str | None = None,
